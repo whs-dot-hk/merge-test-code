@@ -18,16 +18,16 @@ async function GitTest() {
 
   const repository = await Git.Repository.open("test")
 
-  const our = "master"
-  const their = "refs/remotes/origin/add-exclamation-mark"
+  const ourBranchName = "master"
+  const theirBranchName = "refs/remotes/origin/add-exclamation-mark"
 
-  const ourCommit = await repository.getBranchCommit(our)
-  const theirCommit = await repository.getBranchCommit(their)
+  const ourCommit = await repository.getBranchCommit(ourBranchName)
+  const theirCommit = await repository.getBranchCommit(theirBranchName)
 
   const signature = Git.Signature.now("whs", "hswongac@gmail.com")
 
   try {
-    await repository.mergeBranches(our, their, signature)
+    await repository.mergeBranches(ourBranchName, theirBranchName, signature)
   } catch (index) {
     await Git.Checkout.tree(repository, ourCommit, {
       checkoutStrategy: Git.Checkout.STRATEGY.FORCE,

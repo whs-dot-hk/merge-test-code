@@ -8,7 +8,7 @@ const writeFile = util.promisify(fs.writeFile)
 
 async function GitTest() {
   await rmdir("test", { recursive: true })
-  await Git.Clone.clone("https://github.com/henrywong-seekers/merge-test.git", "test", {
+  await Git.Clone.clone("https://github.com/whs-dot-hk/merge-test.git", "test", {
     fetchOpts: {
       callbacks: {
         certificateCheck: () => 0
@@ -24,9 +24,10 @@ async function GitTest() {
   const index = await Git.Merge.commits(repository, ourCommit, theirCommit)
 
   if (index.hasConflicts()) {
-    const helloWorldOnly = new Uint8Array(Buffer.from("Hello world"))
-
-    await writeFile("README.md", helloWorldOnly)
+    await Git.Checkout.tree(repository, ourCommit, {
+      checkoutStrategy: Git.Checkout.STRATEGY.FORCE,
+      paths: "README.md",
+    })
   }
 
   const index2 = await repository.refreshIndex()
@@ -37,8 +38,8 @@ async function GitTest() {
 
   const treeOid = await index2.writeTree()
 
-  const author = Git.Signature.now("whs", "hwong@seekerscapital.com")
-  const committor = Git.Signature.now("whs", "hwong@seekerscapital.com")
+  const author = Git.Signature.now("whs", "hswongac@gmail.com")
+  const committor = Git.Signature.now("whs", "hswongac@gmail.com")
 
   await repository.createCommit("refs/heads/master", author, committor, "Test", treeOid, [ourCommit, theirCommit])
 }

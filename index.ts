@@ -18,30 +18,32 @@ async function GitTest() {
 
   const repository = await Git.Repository.open("test")
 
-  const ourCommit = await repository.getBranchCommit("master")
-  const theirCommit = await repository.getBranchCommit("refs/remotes/origin/add-exclamation-mark")
+  const our = "master"
+  const their = "refs/remotes/origin/add-exclamation-mark"
 
-  const index = await Git.Merge.commits(repository, ourCommit, theirCommit)
+  const ourCommit = await repository.getBranchCommit(our)
+  const theirCommit = await repository.getBranchCommit(their)
 
-  if (index.hasConflicts()) {
+  const signature = Git.Signature.now("whs", "hswongac@gmail.com")
+
+  try {
+    await repository.mergeBranches(our, their, signature)
+  } catch (index) {
     await Git.Checkout.tree(repository, ourCommit, {
       checkoutStrategy: Git.Checkout.STRATEGY.FORCE,
       paths: "README.md",
     })
+
+    const index2 = await repository.refreshIndex()
+
+    await index2.addByPath("README.md")
+
+    await index2.write()
+
+    const treeOid = await index2.writeTree()
+
+    await repository.createCommit("refs/heads/master", signature, signature, "Test", treeOid, [ourCommit, theirCommit])
   }
-
-  const index2 = await repository.refreshIndex()
-
-  await index2.addByPath("README.md")
-
-  await index2.write()
-
-  const treeOid = await index2.writeTree()
-
-  const author = Git.Signature.now("whs", "hswongac@gmail.com")
-  const committor = Git.Signature.now("whs", "hswongac@gmail.com")
-
-  await repository.createCommit("refs/heads/master", author, committor, "Test", treeOid, [ourCommit, theirCommit])
 }
 
 GitTest()
